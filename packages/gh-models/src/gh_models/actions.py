@@ -2,26 +2,24 @@
 
 from __future__ import annotations
 
-import datetime as dt
 import re
 import typing as t
 from enum import StrEnum
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field
-
-_GO_ZERO_TIME = dt.datetime(1, 1, 1, tzinfo=dt.UTC)
+from whenever import Instant
 
 _ZERO_STR = {"", "0001-01-01T00:00:00Z"}
 
 
-def _nullable_datetime(v: object) -> object:
+def _nullable_instant(v: object) -> object:
     """Convert Go zero-time and empty strings to None."""
     if isinstance(v, str) and v in _ZERO_STR:
         return None
     return v
 
 
-NullableDatetime = t.Annotated[dt.datetime | None, BeforeValidator(_nullable_datetime)]
+NullableInstant = t.Annotated[Instant | None, BeforeValidator(_nullable_instant)]
 
 
 def _nullable_str(v: object) -> object:
@@ -88,15 +86,8 @@ class Step(BaseModel):
     number: int
     status: StepStatus
     conclusion: NullableStr = None
-    started_at: t.Annotated[NullableDatetime, Field(None, alias="startedAt")]
-    completed_at: t.Annotated[NullableDatetime, Field(None, alias="completedAt")]
-
-    @property
-    def duration_seconds(self) -> float | None:
-        """Return step duration in seconds, or None if not completed."""
-        if self.started_at is None or self.completed_at is None:
-            return None
-        return (self.completed_at - self.started_at).total_seconds()
+    started_at: t.Annotated[NullableInstant, Field(None, alias="startedAt")]
+    completed_at: t.Annotated[NullableInstant, Field(None, alias="completedAt")]
 
     @property
     def is_done(self) -> bool:
@@ -107,6 +98,12 @@ class Step(BaseModel):
     def is_successful(self) -> bool:
         """Return True if the step completed successfully."""
         return self.conclusion == Conclusion.SUCCESS
+
+    def get_duration_seconds(self) -> float | None:
+        """Return step duration in seconds, or None if not completed."""
+        if self.started_at is None or self.completed_at is None:
+            return None
+        return (self.completed_at - self.started_at).in_seconds()
 
     def matches_name(self, pattern: str) -> bool:
         """Return True if the step name matches the given regex pattern."""
@@ -122,17 +119,10 @@ class Job(BaseModel):
     name: str
     status: JobStatus
     conclusion: NullableStr = None
-    started_at: t.Annotated[NullableDatetime, Field(None, alias="startedAt")]
-    completed_at: t.Annotated[NullableDatetime, Field(None, alias="completedAt")]
+    started_at: t.Annotated[NullableInstant, Field(None, alias="startedAt")]
+    completed_at: t.Annotated[NullableInstant, Field(None, alias="completedAt")]
     url: str
     steps: t.Annotated[list[Step], Field(default_factory=list)]
-
-    @property
-    def duration_seconds(self) -> float | None:
-        """Return job duration in seconds, or None if not completed."""
-        if self.started_at is None or self.completed_at is None:
-            return None
-        return (self.completed_at - self.started_at).total_seconds()
 
     @property
     def elapsed_seconds(self) -> float | None:
@@ -144,8 +134,8 @@ class Job(BaseModel):
         if self.started_at is None:
             return None
         if self.completed_at is not None:
-            return (self.completed_at - self.started_at).total_seconds()
-        return (dt.datetime.now(tz=dt.UTC) - self.started_at).total_seconds()
+            return (self.completed_at - self.started_at).in_seconds()
+        return (Instant.now() - self.started_at).in_seconds()
 
     @property
     def is_done(self) -> bool:
@@ -157,13 +147,19 @@ class Job(BaseModel):
         """Return True if the job completed successfully."""
         return self.conclusion == Conclusion.SUCCESS
 
-    def matches_name(self, pattern: str) -> bool:
-        """Return True if the job name matches the given regex pattern."""
-        return bool(re.fullmatch(pattern, self.name))
+    def get_duration_seconds(self) -> float | None:
+        """Return job duration in seconds, or None if not completed."""
+        if self.started_at is None or self.completed_at is None:
+            return None
+        return (self.completed_at - self.started_at).in_seconds()
 
     def get_step(self, name: str) -> Step | None:
         """Return the step with the given name, or None if not found."""
         return next((s for s in self.steps if s.name == name), None)
+
+    def matches_name(self, pattern: str) -> bool:
+        """Return True if the job name matches the given regex pattern."""
+        return bool(re.fullmatch(pattern, self.name))
 
 
 class WorkflowRun(BaseModel):
@@ -183,9 +179,9 @@ class WorkflowRun(BaseModel):
     head_sha: t.Annotated[str, Field(alias="headSha")]
     event: str
     display_title: t.Annotated[str, Field(alias="displayTitle")]
-    created_at: t.Annotated[dt.datetime, Field(alias="createdAt")]
-    started_at: t.Annotated[NullableDatetime, Field(None, alias="startedAt")]
-    updated_at: t.Annotated[dt.datetime, Field(alias="updatedAt")]
+    created_at: t.Annotated[Instant, Field(alias="createdAt")]
+    started_at: t.Annotated[NullableInstant, Field(None, alias="startedAt")]
+    updated_at: t.Annotated[Instant, Field(alias="updatedAt")]
     url: str
     jobs: t.Annotated[list[Job], Field(default_factory=list)]
 
