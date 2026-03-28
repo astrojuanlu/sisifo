@@ -1,0 +1,55 @@
+[build-system]
+requires = ["uv_build>=0.11.1,<0.12.0"]
+build-backend = "uv_build"
+
+[project]
+name = "sisifo"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Juan Luis Cano Rodríguez", email = "juan.rodriguez@canonical.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "gh-models",
+    "gidgethub>=5.4.0",
+]
+
+[project.scripts]
+sisifo = "sisifo:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+    "ruff>=0.15.8",
+    "ty>=0.0.26",
+]
+
+[tool.uv.workspace]
+members = [
+    "packages/gh-models",
+]
+
+[tool.uv.sources]
+gh-models = { workspace = true }
+
+[tool.ruff]
+show-fixes = true
+
+[tool.ruff.lint]
+select = [
+    "F",  # Pyflakes
+    "E",  # Pycodestyle
+    "W",  # Pycodestyle
+    "D",  # Pydocstyle
+    "UP",  # pyupgrade
+    "I",  # isort
+    "PL",  # Pylint
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*" = ["D", "PLR2004"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"
