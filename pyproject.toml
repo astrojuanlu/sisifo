@@ -22,7 +22,7 @@ dependencies = [
 ]
 
 [project.scripts]
-sisifo = "sisifo:main"
+sisifo = "sisifo.__main__:main"
 
 [dependency-groups]
 dev = [
