@@ -1,0 +1,23 @@
+env_list = ["format", "type", "3.13"]
+
+[env_run_base]
+runner = "uv-venv-lock-runner"
+dependency_groups = [
+    "dev",
+]
+commands = [["pytest", { replace = "posargs", default = ["."], extend = true }]]
+
+[env.format]
+description = "format code"
+skip_install = true
+commands = [
+    ["ruff", "check", "--fix", "."],
+    ["ruff", "format", "."],
+]
+
+[env.type]
+description = "check types"
+commands = [
+    ["ty", "check", "src{/}sisifo"],
+    ["ty", "check", "tests"],
+]
