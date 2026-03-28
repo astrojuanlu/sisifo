@@ -12,6 +12,10 @@ Sísifo is a system to monitor and rerun your flaky GitHub Actions pipelines.
 
 ## Usage
 
+> [!WARNING]
+> The explanation below is an aspiration, not the current reality of the repository.
+> Not all the commands below have been implemented yet. Use at your own risk.
+
 (Optional) First, bootstrap the Sísifo configuration from an existing GitHub pull request.
 This will scan your GitHub workflows and create a draft `sisifo.json5` config file
 and a `.sisifo.meta.json` metadata file:
