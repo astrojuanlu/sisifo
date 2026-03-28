@@ -1,0 +1,40 @@
+// Sísifo configuration for monitoring and rerunning GitHub Actions pipelines
+{
+  rules: [
+    {
+      name: "Build charm jobs should complete in 60 minutes",
+      selector: {
+        workflow: "Pull request",
+        job: {
+          pattern: "Build charm .* / Build charm .*",
+        },
+      },
+      conditions: {
+        maxDuration: "60m",
+        state: "success",
+      },
+      actions: {
+        onTimeout: ["cancel", "retry-failed"],
+        onFailure: ["retry-failed"],
+      },
+    },
+    {
+      name: "Pack charm step should complete in 50 minutes",
+      selector: {
+        workflow: "Pull request",
+        job: {
+          pattern: "Build charm .* / Build charm .*",
+        },
+        step: "Pack charm",
+      },
+      conditions: {
+        maxDuration: "50m",
+        state: "success",
+      },
+      actions: {
+        onTimeout: ["cancel", "retry-failed"],
+        onFailure: ["retry-failed"],
+      },
+    },
+  ],
+}

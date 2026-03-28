@@ -1,2 +1,1 @@
-def main() -> None:
-    print("Hello from sisifo!")
+"""Sísifo: monitor and auto-retry flaky GitHub Actions pipelines."""
